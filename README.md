@@ -112,7 +112,7 @@
 	<context:component-scan base-package="org.ygy.common.validator" ></context:component>
 </beans>
 ```
- - 3、web.xml添加检验配置文件路径
+ - 3、web.xml添加校验配置文件的路径
 ```xml
 <filter>
 	<filter-name>sessionFilter</filter-name>   			    		                 	<filter-class>
