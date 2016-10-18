@@ -2,11 +2,12 @@ package validator.demo.selfRuleValidator;
 
 import org.ygy.common.validator.RuleInfo;
 import org.ygy.common.validator.IValidateRuleHandler;
+import org.ygy.common.validator.Validate;
 
 public class Abs implements IValidateRuleHandler{
 
 	@Override
-	public boolean validate(RuleInfo ruleInfo, Object filedValue) {
+	public boolean customValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
 		try {
 			if (ruleInfo.isFormatCorrect()){
 				int value = 0;

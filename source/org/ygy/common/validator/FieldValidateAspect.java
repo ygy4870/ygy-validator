@@ -24,6 +24,8 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.alibaba.fastjson.JSONObject;
+
 @Component
 @Aspect
 public class FieldValidateAspect {
@@ -39,7 +41,7 @@ public class FieldValidateAspect {
     public Object controllerAround(ProceedingJoinPoint point){
         
         Object[] params = null;//入参
-        Object returnValue = null;  //返回值
+        Object returnValue = null;  //返回值 
         HttpServletRequest request = null;
         HttpServletResponse response = null;
         try {
@@ -55,7 +57,7 @@ public class FieldValidateAspect {
             if (null == config) {
             	this.validateConfig();
             }
-            //从注解上获取校验规则，否则从配置文件中获取校验规则，并去掉所有空格
+            //从注解上获取校验规则，否则从配置文件中获取校验规则，并去掉所有空格          
             String validateRule  = validate.value();
             if ("".equals(validateRule)) {
                 String url = validate.url();
@@ -67,53 +69,74 @@ public class FieldValidateAspect {
             }
             String[] fieldRules = validateRule.split("\\|");
             boolean pass = true;
+            Object filedValue = null;
             List<ValidateResult> validateResults = new ArrayList<ValidateResult>();
+            JSONObject jSONObject = null;
             for (String fieldRule : fieldRules){
                 RuleInfo ruleInfo = this.parseRule(fieldRule);
                 if (ruleInfo.isFormatCorrect()) {// 只处理符合大致校验格式的字段校验
-                    Object filedValue = null;
-                    if ( ruleInfo.isRequestParamRule() ) {
-                        filedValue = request.getParameter(ruleInfo.getFiled());
+                    if (validate.isComplexObject()) {//复杂对象
+                        if (null == jSONObject) {
+                            jSONObject = (com.alibaba.fastjson.JSONObject) JSONObject.toJSON(params[0]);//复杂对象解析
+                        }
+                        filedValue = jSONObject.get(ruleInfo.getFiled());
                     } else {
-                        filedValue = params[ruleInfo.getPosition()];
+                        if ( ruleInfo.isRequestParamRule() ) {
+                            filedValue = request.getParameter(ruleInfo.getFiled());
+                        } else {
+                            filedValue = params[ruleInfo.getPosition()];
+                        }
                     }
-                    switch (ruleInfo.getRuleType()) {
-                    case "must": 
-                        pass = this.mustValidate(ruleInfo, filedValue); 
-                        break;
-                    case "int": 
-                        pass = this.intValidate(ruleInfo, filedValue); 
-                        break;
-                    case "strin":
-                        pass = this.strinValidate(ruleInfo, filedValue);
-                        break;
-                    case "len":
-                        pass = this.lenValidate(ruleInfo, filedValue);
-                        break;
-                    case "date":
-                        pass = this.dateFormatValidate(ruleInfo, filedValue);
-                        break;
-                    case "reg":
-                        pass = this.regValidate(ruleInfo, filedValue);
-                        break;
-                    case "long": 
-                        pass = this.longValidate(ruleInfo, filedValue);
-                        break;
-                    case "float":
-                        pass = this.floatValidate(ruleInfo, filedValue);
-                        break;
-                    case "double":
-                        pass = this.doubleValidate(ruleInfo, filedValue);
-                        break;
-                    default://自定义规则校验
-                    	pass = this.otherValidate(ruleInfo,filedValue);
-                        break;
+                    /**
+                     * "!!".equals(ruleInfo.getNotNull())--单个校验规则强制要求非空
+                     * (validate.must() && !"!".equals(ruleInfo.getNotNull()))--全部设置为要求非空，单个设置为可以空优先级更高
+                     * 建议-传参JAVA对应类型要求为非基本类型，因为基本类型即使没有传值也会被置初值，对象类型为null
+                     */
+                    if ( "!!".equals(ruleInfo.getNotNull()) || (validate.must() && !"!".equals(ruleInfo.getNotNull())) ) {
+                        if ( null == filedValue || "".equals(filedValue.toString().trim())) {
+                            pass = false;
+                        }
+                    }
+                    if (pass) {
+                        switch (ruleInfo.getRuleType()) {
+                        case "must":
+                            pass = this.mustValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "int":
+                            pass = this.intValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "strin":
+                            pass = this.strinValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "len":
+                            pass = this.lenValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "date":
+                            pass = this.dateFormatValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "reg":
+                            pass = this.regValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "long":
+                            pass = this.longValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "float":
+                            pass = this.floatValidate(ruleInfo, filedValue, validate);
+                            break;
+                        case "double":
+                            pass = this.doubleValidate(ruleInfo, filedValue, validate);
+                            break;
+                        default:// 自定义规则校验
+                            pass = this.otherValidate(ruleInfo, filedValue, validate);
+                            break;
+                        }
                     }
                     if (!pass) {
                         ValidateResult validateResult = new ValidateResult();
                         validateResult.setFiled(ruleInfo.getFiled());
+                        validateResult.setValue(filedValue);
                         validateResult.setRule(fieldRule);
-                        validateResult.setResultCode("2");//校验不通过
+                        validateResult.setResultCode("2");//校验不通过                      
                         validateResults.add(validateResult);
                     }
                 } 
@@ -149,12 +172,13 @@ public class FieldValidateAspect {
     }
 
 	/**
-     *  必要性校验
+     * 必要性校验
      * @param ruleInfo
      * @param filedValue
+	 * @param validate 
      * @return
      */
-    private boolean mustValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean mustValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         if (ruleInfo.getRuleContent() != null && ruleInfo.getRuleContent().length > 0) {
             if ( "true".equalsIgnoreCase(ruleInfo.getRuleContent()[0]) ) {
                 if ( filedValue== null || "".equals(filedValue.toString().trim())) {
@@ -169,28 +193,41 @@ public class FieldValidateAspect {
      * int型数据校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean intValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean intValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
+            if (null == filedValue) {
+                return true;
+            }
+            Integer value = null;
+            if ( validate.isComplexObject()) {
+                value = (Integer) filedValue;
+            } else {
+                if (ruleInfo.isRequestParamRule()) {
+                    try {
+                        value = Integer.parseInt((String) filedValue);
+                    } catch (Exception e) {
+                        return false;//非int
+                    }
+                } else {
+                    value = (Integer) filedValue;
+                }
+            }
             int min = 0;
             int max = 0;
-            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示最小值
+            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示int最小值               
                 min = Integer.MIN_VALUE;
             } else {
                 min = Integer.parseInt(ruleInfo.getRuleContent()[0]);
             }
-            if ("M".equals(ruleInfo.getRuleContent()[1])) {//M表示最大值
+            if ("M".equals(ruleInfo.getRuleContent()[1])) {//M表示int最大值             
                 max = Integer.MAX_VALUE;
             } else {
                 max = Integer.parseInt(ruleInfo.getRuleContent()[1]);
             }
-            Integer value = null;
-            if (ruleInfo.isRequestParamRule()) {
-                value = Integer.parseInt((String) filedValue);
-            } else {
-                value = (Integer) filedValue;
-            }
+            
             if ("(".equals(ruleInfo.getLeftSeparate())) {
                 if (")".equals(ruleInfo.getRightSeparate())) {
                     if (value <= min || value >= max) {
@@ -221,11 +258,13 @@ public class FieldValidateAspect {
      * 校验String型数据是否为规定中的某一个
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean strinValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean strinValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
-            if (ruleInfo.getRuleContent() != null && ruleInfo.getRuleContent().length > 1) {
+            if (ruleInfo.getRuleContent() != null && ruleInfo.getRuleContent().length > 1
+                    && null != filedValue && !"".equals(filedValue)) {
                 return this.contains(ruleInfo.getRuleContent(), (String)filedValue);
             }
         } catch (Exception e) {
@@ -237,9 +276,10 @@ public class FieldValidateAspect {
      * len长度校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean lenValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean lenValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
             int len = Integer.parseInt(ruleInfo.getRuleContent()[0]);
             if (len > 0 && len != ((String)filedValue).length() ){
@@ -254,9 +294,10 @@ public class FieldValidateAspect {
      * date日期格式校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean dateFormatValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean dateFormatValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat(ruleInfo.getRuleContent()[0]);
             try {
@@ -275,13 +316,16 @@ public class FieldValidateAspect {
      * reg正则匹配校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean regValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean regValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
-             Pattern pattern = Pattern.compile(ruleInfo.getRuleContent()[0]);
-             Matcher matcher = pattern.matcher((String)filedValue);
-             return matcher.matches();
+            if (null == filedValue) {
+                Pattern pattern = Pattern.compile(ruleInfo.getRuleContent()[0]);
+                Matcher matcher = pattern.matcher((String)filedValue);
+                return matcher.matches();
+            }
         } catch (Exception e) {
         }
         return true;
@@ -291,27 +335,39 @@ public class FieldValidateAspect {
      * long型数据校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean longValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean longValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
+            if (null == filedValue) {
+                return true;
+            }
+            Long value = null;
+            if ( validate.isComplexObject() ) {
+                value = (Long) filedValue;
+            } else {
+                if (ruleInfo.isRequestParamRule()) {
+                    try {
+                        value = Long.parseLong((String) filedValue);
+                    } catch (Exception e) {
+                        return false;//非long
+                    }
+                } else {
+                    value = (Long) filedValue;
+                }
+            }
             long min = 0L;
             long max = 0L;
-            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示最小值
+            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示long最小值                
                 min = Long.MIN_VALUE;
             } else {
                 min = Long.parseLong(ruleInfo.getRuleContent()[0]);
             }
-            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示最大值
+            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示long最大值              
                 max = Long.MAX_VALUE;
             } else {
                 max = Long.parseLong(ruleInfo.getRuleContent()[1]);
-            }
-            Long value = null;
-            if (ruleInfo.isRequestParamRule()) {
-                value = Long.parseLong((String) filedValue);
-            } else {
-                value = (Long) filedValue;
             }
             if ("(".equals(ruleInfo.getLeftSeparate())) {
                 if (")".equals(ruleInfo.getRightSeparate())) {
@@ -343,27 +399,39 @@ public class FieldValidateAspect {
      * float型数据校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate
      * @return
      */
-    private boolean floatValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean floatValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
+            if (null == filedValue) {
+                return true;
+            }
+            Float value = null;
+            if ( validate.isComplexObject() ) {
+                value = (Float) filedValue;
+            } else {
+                if (ruleInfo.isRequestParamRule()) {
+                    try {
+                        value = Float.parseFloat((String) filedValue);
+                    } catch (Exception e) {
+                        return false;//非float
+                    }
+                } else {
+                    value = (Float) filedValue;
+                }
+            }
             float min = 0L;
             float max = 0L;
-            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示最小值
+            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示float最小值              
                 min = Float.MIN_VALUE;
             } else {
                 min = Float.parseFloat(ruleInfo.getRuleContent()[0]);
             }
-            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示最大值
+            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示float最大值               
                 max = Float.MAX_VALUE;
             } else {
                 max = Float.parseFloat(ruleInfo.getRuleContent()[1]);
-            }
-            Float value = null;
-            if (ruleInfo.isRequestParamRule()) {
-                value = Float.parseFloat((String) filedValue);
-            } else {
-                value = (Float) filedValue;
             }
             if ("(".equals(ruleInfo.getLeftSeparate())) {
                 if (")".equals(ruleInfo.getRightSeparate())) {
@@ -395,27 +463,39 @@ public class FieldValidateAspect {
      * double型数据校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean doubleValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean doubleValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
         try {
+            if (null == filedValue) {
+                return true;
+            }
+            double value = 0.0;
+            if ( validate.isComplexObject() ) {
+                value = (Double) filedValue;
+            } else {
+                if (ruleInfo.isRequestParamRule()) {
+                    try {
+                        value = Double.parseDouble((String) filedValue);
+                    } catch (Exception e) {
+                        return false;//非double
+                    }
+                } else {
+                    value = (Double) filedValue;
+                }
+            }
             double min = 0.0;
             double max = 0.0;
-            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示最小值
+            if ("m".equals(ruleInfo.getRuleContent()[0])) {//m表示double最小值                
                 min = Double.MIN_VALUE;
             } else {
                 min = Double.parseDouble(ruleInfo.getRuleContent()[0]);
             }
-            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示最大值
+            if ("M".equals(ruleInfo.getRuleContent()[1])) {// M表示double最大值               
                 max = Double.MAX_VALUE;
             } else {
                 max = Double.parseDouble(ruleInfo.getRuleContent()[1]);
-            }
-            double value = 0.0;
-            if (ruleInfo.isRequestParamRule()) {
-                value = Double.parseDouble((String) filedValue);
-            } else {
-                value = (Double) filedValue;
             }
             double exp = 10E-10;
             if ("(".equals(ruleInfo.getLeftSeparate())) {
@@ -448,12 +528,13 @@ public class FieldValidateAspect {
      * 用户自定义规则校验
      * @param ruleInfo
      * @param filedValue
+     * @param validate 
      * @return
      */
-    private boolean otherValidate(RuleInfo ruleInfo, Object filedValue) {
+    private boolean otherValidate(RuleInfo ruleInfo, Object filedValue, Validate validate) {
     	try {
     		IValidateRuleHandler validateRuleHandler = validateRuleHandlerList.get(ruleInfo.getRuleType());
-    		return validateRuleHandler.validate(ruleInfo, filedValue);
+    		return validateRuleHandler.customValidate(ruleInfo, filedValue, validate);
     	} catch (Exception e) {
     		System.out.println(ruleInfo.getRuleType()+"没有相应校验处理类："+e);
 		}
@@ -516,6 +597,7 @@ public class FieldValidateAspect {
             String ruleType = rule.substring(0, leftIndex).toLowerCase();//转换成小写，即忽略大小写
             ruleInfo.setRuleType(ruleType);    
             ruleInfo.setRuleContent(rule.substring(leftIndex+1, rightIndex).replaceAll("\"", "").replaceAll("'", "").split(","));
+            ruleInfo.setNotNull(rule.substring(rightIndex+1).replaceAll(" ", ""));
         } catch (Exception e) {
             ruleInfo.setFormatCorrect(false);
         }
@@ -580,5 +662,5 @@ public class FieldValidateAspect {
           System.out.println("@Validate注解相关properties配置文件读取失败");
       }
     }
-    
+
 }

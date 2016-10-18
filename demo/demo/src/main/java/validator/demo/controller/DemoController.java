@@ -14,8 +14,8 @@ import org.ygy.common.validator.Validate;
 @Controller
 public class DemoController {
 	
-	
-	@Validate("age:int(1,M)")//规定age为大于1的int整数
+	//must=true表示所有字段不能为空，规定age为大于1的int整数，感叹号表示可以为空（优先级高于must）
+	@Validate(value="age:int(1,M)!|status:strin(0,1,2)",must=true)
 	@ResponseBody
 	@RequestMapping("getInfo")
 	public Map<String,Object> getInfo(HttpServletRequest request, HttpServletResponse response){

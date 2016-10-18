@@ -28,4 +28,16 @@ public @interface Validate {
      * @return
      */
     String handler() default "";
+    
+    /**
+     * 入参是否复杂对象
+     * @return
+     */
+    boolean isComplexObject() default false;
+    
+    /**
+     * 字段必须非""、非null
+     * @return
+     */
+    boolean must() default false;
 }

@@ -1,3 +1,3 @@
 
 
-记得把validator-0.0.1.jar包扔到WEB-INF/lib/下
+记得把jar包扔到WEB-INF/lib/下

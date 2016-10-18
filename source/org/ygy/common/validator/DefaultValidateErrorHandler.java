@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.ygy.common.validator.ValidateResult;
 
 @Controller
 public class DefaultValidateErrorHandler{
@@ -20,6 +21,8 @@ public class DefaultValidateErrorHandler{
     public Object validateHandler(HttpServletRequest request, HttpServletResponse response){
 		List<ValidateResult> validateResults = (List<ValidateResult>) request.getAttribute("validateResults");
 		Map<String,Object> result = new HashMap<String,Object>();
+		result.put("status", "-1");
+		result.put("msg", "参数不合法");
         result.put("validateResults", validateResults);
         return result;
     }

@@ -3,6 +3,7 @@
 public class ValidateResult {
 
     private String filed;
+    private Object value;
     private String rule;
     /**
      * 结果码，0-通过，1-格式错误，2-不通过
@@ -27,5 +28,10 @@ public class ValidateResult {
     public void setResultCode(String resultCode) {
         this.resultCode = resultCode;
     }
-    
+    public Object getValue() {
+        return value;
+    }
+    public void setValue(Object value) {
+        this.value = value;
+    }
 }
