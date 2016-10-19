@@ -251,7 +251,15 @@ public Map<String,Object> getPersonInfo(HttpServletRequest request, HttpServletR
 
 除了代码bug的修复外，相较于0.0.1版本有如下几点不同。
 
- - 1、	支持简单的复杂对象(即属性都为基本类型)校验
+ - 1、增加依赖
+```xml
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>fastjson</artifactId>
+    <version>1.2.5</version>
+</dependency>
+```
+ - 2、	支持简单的复杂对象(即属性都为基本类型)校验
 当入参为单个复杂对象时，可添加isComplexObject=true标识为复杂对象，如：
 ```java
 @Validate(value="age:int(1,M)|status:strin(0,1,2)",isComplexObject=true)
@@ -261,7 +269,7 @@ public Map<String,Object> getPersonInfo(HttpServletRequest request, HttpServletR
 ```
 校验Person对象中的age和status属性。
 
- - 2、	增加字段全局的必要性设置
+ - 3、	增加字段全局的必要性设置
 我们知道0.0.1版本可以通过must校验规则实现字段必要性的校验，但如果想对所有字段都要求必要性校验，那就比较麻烦。故新增字段全局必要性设置。
 ```java
 @Validate(value="age:int(1,M)!|status:strin(0,1,2)",must=true)
@@ -276,4 +284,3 @@ must=true表示所有字段不能为空，规定age为大于1的int整数，单�
 
 
 	
-
