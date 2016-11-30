@@ -279,8 +279,25 @@ public Map<String,Object> getPersonInfo(HttpServletRequest request, HttpServletR
 ```
 must=true表示所有字段不能为空，规定age为大于1的int整数，单个感叹号“!”表示age可以为空（优先级高于must）。当然must没有配置时默认为false，及所有字段不要求必要性校验。如果某个字段要求必要性校验，可以在校验表达式后添加两个感叹号“!!”即可。如@Validate(value="age:int(1,M)!!|status:strin(0,1,2)|name:len(4)")表示除了age要求必要性校验，其他字段不作要求。
 	
+## org.ygy.common.validator-0.0.3.jar
 
-
-
-
-	
+修复部分bug,增加xss非法字符过滤。
+ - 过滤器增加要过滤的非法字符的初始化参数。
+ - ```xml
+<filter>
+    <filter-name>ygyFilter</filter-name>
+    <filter-class>org.ygy.common.validator.ValidateContextFilter</filter-class>
+    <init-param>
+      <param-name>validateConfig</param-name>
+      <param-value>conf/validate.properties</param-value>
+    </init-param> 
+    <init-param>
+      <param-name>illegalCharacter</param-name>
+      <param-value>&lt;script,&lt;javascript,&lt;iframe,&lt;!--,&lt;</param-value><!--以逗号分隔  -->
+    </init-param> 
+  </filter>
+  <filter-mapping>
+    <filter-name>ygyFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+```
