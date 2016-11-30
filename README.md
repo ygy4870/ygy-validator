@@ -283,7 +283,7 @@ must=true表示所有字段不能为空，规定age为大于1的int整数，单�
 
 修复部分bug,增加xss非法字符过滤。
  - 过滤器增加要过滤的非法字符的初始化参数。
- - ```xml
+ ```xml
 <filter>
     <filter-name>ygyFilter</filter-name>
     <filter-class>org.ygy.common.validator.ValidateContextFilter</filter-class>
