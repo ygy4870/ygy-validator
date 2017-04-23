@@ -61,9 +61,9 @@ public class ValidateContext {
      */
     private static ICacheStrategy cacheStrategyClass;
     /**
-     * 若cache == true 且 cacheStrategy == "lru",缓存长度生效，默认为----待测试 
+     * 若cache == true 且 cacheStrategy == "lru",缓存长度生效，默认为512
      */
-    private static int cacheCount = 100;
+    private static int cacheCount = 512;
     /**
      * 工具自带配置文件路径
      */

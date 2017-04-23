@@ -1,14 +1,16 @@
 package org.ygy.common.validator.handler;
 
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
+import org.ygy.common.validator.bean.ValidateResult;
 
 public class FloatHandler implements IValidateRuleHandler{
 
 	@Override
-	public boolean validate(ValidateExpItemInfo ruleInfo, Object fieldValue) {
+	public ValidateResult validate(ValidateExpItemInfo ruleInfo, Object fieldValue) {
+		ValidateResult result = new ValidateResult();
 		try {
             if (null == fieldValue) {
-                return true;
+                return result;
             }
             float value = 0.0f;
             try {
@@ -20,16 +22,9 @@ public class FloatHandler implements IValidateRuleHandler{
             		value = Float.parseFloat((String) fieldValue);
             	}
 			} catch (Exception e1) {
-                return false;//非float
-			}
-            try {
-            	value = (Float) fieldValue;
-			} catch (Exception e1) {
-				try {
-                    value = Float.parseFloat((String) fieldValue);
-                } catch (Exception e2) {
-                    return false;//非float
-                }
+				result.setSuccess(false);//非float
+            	result.setMsg("校验不通过");
+            	return result;
 			}
             float min = 0L;
             float max = 0L;
@@ -46,28 +41,34 @@ public class FloatHandler implements IValidateRuleHandler{
             if ("(".equals(ruleInfo.getLeftSeparate())) {
                 if (")".equals(ruleInfo.getRightSeparate())) {
                     if (value <= min || value >= max) {
-                        return false;
+                    	result.setSuccess(false);
+                    	result.setMsg("校验不通过");
                     }
                 } else if ("]".equals(ruleInfo.getRightSeparate())) {
                     if (value <= min || value > max) {
-                        return false;
+                    	result.setSuccess(false);
+                    	result.setMsg("校验不通过");
                     }
                 }
             } else if ("[".equals(ruleInfo.getLeftSeparate())) {
                 if (")".equals(ruleInfo.getRightSeparate())) {
                     if (value < min || value >= max) {
-                        return false;
+                    	result.setSuccess(false);
+                    	result.setMsg("校验不通过");
                     }
                 } else if ("]".equals(ruleInfo.getRightSeparate())) {
                     if (value < min || value > max) {
-                        return false;
+                    	result.setSuccess(false);
+                    	result.setMsg("校验不通过");
                     }
                 }
             }
         } catch (Exception e) {
-        	return false;
+        	System.out.println(e);
+        	result.setSuccess(false);
+        	result.setMsg("校验规则书写错误");
         }
-        return true;
+        return result;
 	}
 
 }

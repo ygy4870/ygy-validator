@@ -2,8 +2,13 @@
 
 
 public class ValidateResult {
+	
+	private boolean success = true;
+	
+	private String msg;
 
     private Object fieldValue;
+    
     private ValidateExpItemInfo validateExpItemInfo;
 
     public Object getFieldValue() {
@@ -27,5 +32,21 @@ public class ValidateResult {
 	}
 	public void setValidateExpItemInfo(ValidateExpItemInfo validateExpItemInfo) {
 		this.validateExpItemInfo = validateExpItemInfo;
+	}
+	/**
+	 * 默认为true
+	 * @return
+	 */
+	public boolean getSuccess() {
+		return success;
+	}
+	public void setSuccess(boolean success) {
+		this.success = success;
+	}
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
 	}
 }

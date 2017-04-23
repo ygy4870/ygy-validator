@@ -14,9 +14,12 @@
   
    <!-- 启动AOP注解 -->               
     <aop:aspectj-autoproxy proxy-target-class="true"/> 
-    <!-- <context:component-scan base-package="ygy.test.fieldValidateTest.controller" /> -->
-    <context:component-scan base-package="org.ygy.common.validator" />
+    <!-- <context:component-scan base-package="org.ygy.common.validator" /> -->
     <bean class="ygy.test.fieldValidateTest.controller.TestController"/>
+    
+    <bean class="org.ygy.common.validator.FieldValidateAspect"/>
+    <bean class="org.ygy.common.validator.DefaultValidateErrorHandler"/>
+    
     <mvc:annotation-driven />  
   
 </beans> 

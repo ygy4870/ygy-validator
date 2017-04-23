@@ -81,6 +81,7 @@ public class FieldValidateAspect {
             List<ValidateResult> validateResults = new ArrayList<ValidateResult>();//存放字段校验不通过的结果信息
             for (ValidateExpItemInfo validateExpItemInfo : validateExpInfo) {
             	boolean pass = true;
+            	ValidateResult validateResult = new ValidateResult();;
             	if (validateExpItemInfo.isFormatCorrect()) {// 只处理符合大致校验格式的字段校验
                 	// 获取要校验的字段值
                 	fieldValue = this.getFieldValue(jSONObject,validateExpItemInfo,request);
@@ -94,15 +95,17 @@ public class FieldValidateAspect {
                     if ( "!!".equals(validateExpItemInfo.getNotNull()) || (validate.must() && !"!".equals(validateExpItemInfo.getNotNull())) ) {
                         if ( null == fieldValue || "".equals(fieldValue.toString().trim())) {
                             pass = false;
+                            validateResult.setSuccess(false);
+                            validateResult.setMsg("该字段不能为空");
                         }
                     }
                     // 具体字段校验
                     if (pass) {
-                    	pass = this.fieldValidate(validateExpItemInfo, fieldValue);
+                    	validateResult = this.fieldValidate(validateExpItemInfo, fieldValue);
+                    	pass = validateResult.getSuccess();
                     }
                     // 校验不通过信息收集
                     if (!pass) {
-                        ValidateResult validateResult = new ValidateResult();
                         validateResult.setValidateExpItemInfo(validateExpItemInfo);
                         validateResult.setFieldValue(fieldValue);           
                         validateResults.add(validateResult);
@@ -230,14 +233,17 @@ public class FieldValidateAspect {
      * @param fieldValue
      * @return
      */
-	private boolean fieldValidate(ValidateExpItemInfo itemInfo, Object fieldValue) {
+	private ValidateResult fieldValidate(ValidateExpItemInfo itemInfo, Object fieldValue) {
+		ValidateResult result = new ValidateResult(); 
 		try {
     		IValidateRuleHandler validateRuleHandler = ValidateContext.getValidateRuleHandler(itemInfo.getRuleType());
-    		return validateRuleHandler.validate(itemInfo, fieldValue);
+    		result = validateRuleHandler.validate(itemInfo, fieldValue);
     	} catch (Exception e) {
     		System.out.println(itemInfo.getRuleType()+"型校验规则，没有相应校验处理类："+e);
+    		result.setSuccess(false);
+    		result.setMsg(itemInfo.getRuleType()+"型校验规则，没有相应校验处理类");
 		}
-		return true;
+		return result;
 	}
 
 }

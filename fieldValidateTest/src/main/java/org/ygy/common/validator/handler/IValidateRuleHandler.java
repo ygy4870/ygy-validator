@@ -1,16 +1,17 @@
 package org.ygy.common.validator.handler;
 
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
+import org.ygy.common.validator.bean.ValidateResult;
 
 public interface IValidateRuleHandler {
 
 	/**
-	 * 校验逻辑
+	 * 字段校验结果
 	 * @param ruleInfo
 	 * @param fieldValue
-	 * @return true-校验通过，false-校验不通过
+	 * @return
 	 */
-	boolean validate(ValidateExpItemInfo ruleInfo, Object fieldValue);
+	ValidateResult validate(ValidateExpItemInfo ruleInfo, Object fieldValue);
 	
 	/**
 	 * 解析校验表达项中的内容成需要的数据类型
