@@ -129,5 +129,19 @@ public class TestController {
         return result;
     }
 	
+	/**
+	 * 自定义校验规则测试
+	 */
+	@Validate("age:abs(10)")
+	@ResponseBody
+    @RequestMapping("/getPerson9")
+    public Map<String,Object> getPerson9(@RequestBody Map<String,Object> map){
+	    System.out.println(map);
+        System.out.println(map.get("age"));
+        Map<String,Object> result = new HashMap<String,Object>();
+        result.put("status", "0");
+        return result;
+    }
+	
 
 }

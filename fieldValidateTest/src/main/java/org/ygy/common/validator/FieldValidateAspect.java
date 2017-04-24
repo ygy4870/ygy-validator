@@ -82,7 +82,7 @@ public class FieldValidateAspect {
             for (ValidateExpItemInfo validateExpItemInfo : validateExpInfo) {
             	boolean pass = true;
             	ValidateResult validateResult = new ValidateResult();;
-            	if (validateExpItemInfo.isFormatCorrect()) {// 只处理符合大致校验格式的字段校验
+            	if (validateExpItemInfo.getFormatCorrect()) {// 只处理符合大致校验格式的字段校验
                 	// 获取要校验的字段值
                 	fieldValue = this.getFieldValue(jSONObject,validateExpItemInfo,request);
                     // 判空必要性处理

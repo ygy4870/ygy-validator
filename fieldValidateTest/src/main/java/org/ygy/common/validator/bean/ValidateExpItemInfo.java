@@ -88,7 +88,7 @@ public class ValidateExpItemInfo{
         this.notNull = notNull;
     }
 
-    public boolean isFormatCorrect() {
+    public boolean getFormatCorrect() {
         return formatCorrect;
     }
 
