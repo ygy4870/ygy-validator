@@ -30,24 +30,24 @@ public class FieldValidateAspect {
     @Pointcut("@annotation(org.ygy.common.validator.bean.Validate)")
     private void controllerMethod(){};
     
-    @After("controllerMethod()")
-    public void controllerAfter() {
-    	try {
-    		new Thread(new Runnable() {
-				
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(5*1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					System.out.println("方法后-----------------------------");
-				}
-			}).start();
-		} catch (Exception e) {
-		}
-    }
+//    @After("controllerMethod()")
+//    public void controllerAfter() {
+//    	try {
+//    		new Thread(new Runnable() {
+//				
+//				@Override
+//				public void run() {
+//					try {
+//						Thread.sleep(5*1000);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//					System.out.println("方法后-----------------------------");
+//				}
+//			}).start();
+//		} catch (Exception e) {
+//		}
+//    }
 
     @Around("controllerMethod()")
     public Object controllerAround(ProceedingJoinPoint point){

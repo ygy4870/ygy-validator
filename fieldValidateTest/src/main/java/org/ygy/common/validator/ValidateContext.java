@@ -49,9 +49,9 @@ public class ValidateContext {
      */
     private static String[] illegalCharArray;
     /**
-     * 是否对校验表达式解析结果进行缓存，默认为true
+     * 是否对校验表达式解析结果进行缓存，默认为false
      */
-    private static boolean cache = true;
+    private static boolean cache = false;
     /**
      * 若cache == true，缓存策略cacheStrategy有两种：all,lru。默认为all,即全部缓存
      */

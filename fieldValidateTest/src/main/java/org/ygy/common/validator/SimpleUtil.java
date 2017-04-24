@@ -246,6 +246,9 @@ public class SimpleUtil {
 		ResourceLoader resourceLoader = new DefaultResourceLoader();
 		PropertiesPersister propertiesPersister = new DefaultPropertiesPersister();
 		for (String location : resourcesPaths) {
+			if (null == location || "".equals(location.trim())) {
+				continue;
+			}
 			InputStream is = null;
 			try {
 				Resource resource = resourceLoader.getResource(location);
