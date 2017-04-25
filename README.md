@@ -171,6 +171,7 @@ getPerson3 = age:int(1,M)!!|status:strin(0,1,2)|name:len(4)
 ```
 - 自定义校验规则配置
 提供用户自定义字段校验规则的配置，如果自定义校验规则与预定义的规则同名，则以预定义规则为准，自定义校验规则无效。步骤如下：
+
 （1）步骤一、实现IValidateRuleHandler接口
 ```java
 public interface IValidateRuleHandler {
@@ -232,6 +233,7 @@ abs = org.ygy.test.Abs配置自定义规则的处理器的类完整路径
 public Map<String,Object> getPerson(@RequestBody Map<String,Object> map){
 ```
 - 非法字符过滤配置
+
 是否进行非法字符过滤,默认为true
 ```xml
 filter = true
@@ -241,6 +243,7 @@ filter = true
 illegalCharacter = <script,<javascript,<iframe,<!--
 ```
 - 缓存配置
+
 是否开启校验表达式解析结果缓存，默认为false
 ```xml
 cache = true
