@@ -151,6 +151,7 @@ public Object validateHandler(HttpServletRequest request){
 @Validate的属性配置在校验配置文件validate.propeties中全都有对应，除此之外，校验配置文件还可以进行自定义校验规则的配置、非法字符过滤的配置及缓存配置。
 
 - @Validate对应属性配置
+
 （1）针对所有的请求处理方法，要求对配置了校验的字段全部都要校验,相对于@Validate中的all属性配置针对所在请求处理方法，@Validate中的优先级更高，当@Validate中没配置，已配置文件的为准，若配置文件中也没有配置，则默认不进行所有字段校验，即当有一字段校验不通过，立即返回，不进行后续字段校验
 ```xml
 validateAll = true
