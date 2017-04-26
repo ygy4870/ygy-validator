@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -67,7 +69,10 @@ public class FieldValidateAspect {
             // 复杂对象
             JSONObject jSONObject = null;
             if ( !ValidateContext.getIsFromParam()) {
-                jSONObject = (com.alibaba.fastjson.JSONObject) JSONObject.toJSON(params[0]);
+            	if (null != params[0] && !(params[0] instanceof ServletRequest)
+            			&& !(params[0] instanceof ServletResponse)) {
+            		jSONObject = (com.alibaba.fastjson.JSONObject) JSONObject.toJSON(params[0]);
+            	}
             }
             // xss非法字符过滤
             this.filterIllegalCharater(params, jSONObject);
@@ -164,7 +169,8 @@ public class FieldValidateAspect {
      */
 	private void filterIllegalCharater(Object[] params, JSONObject jSONObject) {
 		boolean isFromParam = ValidateContext.getIsFromParam();// 请求参数是否可以通过getParameter获取
-		if (!isFromParam && ValidateContext.getFilter()) {// 如果是已经在过滤器ValidateContextFilter中处理了，否则在这里处理
+		if (!isFromParam && ValidateContext.getFilter()
+				&& null != jSONObject) {// 如果是已经在过滤器ValidateContextFilter中处理了，否则在这里处理
 			SimpleUtil.filterIllegalCharaterFromJSONObj(jSONObject, 0);
 			params[0] = JSON.parseObject(jSONObject.toJSONString(), params[0].getClass());
 		}
@@ -218,6 +224,9 @@ public class FieldValidateAspect {
      * @return
      */
     private Object getFieldValue(JSONObject jSONObject,ValidateExpItemInfo ruleInfo, HttpServletRequest request) {
+    	if (null == jSONObject) {
+    		return null;
+    	}
     	Object fieldValue = null;
     	if ( !ValidateContext.getIsFromParam()) {//非表单传值
             fieldValue = SimpleUtil.getFromJSONObject(ruleInfo.getField(), jSONObject);
