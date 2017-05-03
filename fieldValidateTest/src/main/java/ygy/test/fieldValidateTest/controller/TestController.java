@@ -1,5 +1,6 @@
 package ygy.test.fieldValidateTest.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.ygy.common.validator.bean.Validate;
+import org.ygy.common.validator.bean.ValidateHandler;
+import org.ygy.common.validator.bean.ValidateResult;
 
 @Controller
 @RequestMapping("test")
@@ -21,10 +24,8 @@ public class TestController {
 	@Validate("name:reg(^yang.*)|sex:strin(0,1,2)|age:int(0,200)|phone:len(11)|money:double(0,100)|birthday:date(YYYY/MM/DD)")
 	@ResponseBody
     @RequestMapping("getPerson")
-    public Map<String,Object> getPerson(HttpServletRequest request, 
-    		String name, String sex, Integer age, String phone, Double money, String birthday){
+    public Map<String,Object> getPerson(HttpServletRequest request){
 	    System.out.println(request.getParameter("age"));
-	    System.out.println(age);
 	    Map<String,Object> result = new HashMap<String,Object>();
 	    result.put("status", "0");
 	    return result;
@@ -47,7 +48,7 @@ public class TestController {
 	/**
 	 * 测试三：简单字段校验（json请求）,要求：参数放在第一个（entity）
 	 */
-	@Validate(value="name:reg(^yang.*)|sex:strin(0,1,2)|age:int(0,200)|phone:len(11)|money:double(0,100)|birthday:date(YYYY/MM/DD)")
+	@Validate(value="name:reg(^yang.*)|sex:strin(0,1,2)|age:int(0,200)+int(1,10)|phone:len(11)|money:double(0,100)|birthday:date(YYYY/MM/DD)")
 	@ResponseBody
     @RequestMapping("/getPerson3")
     public Map<String,Object> getPerson3(@RequestBody Person person){
@@ -143,5 +144,38 @@ public class TestController {
         return result;
     }
 	
-
+	
+	/**
+	 * 校验不通过，方法内自己处理，不做统一处理
+	 */
+	@Validate(value="age:int(0,10)")
+	@ResponseBody
+    @RequestMapping("/getPerson10")
+    public Map<String,Object> getPerson10(Person person,@ValidateHandler ArrayList<ValidateResult> validateResults){
+		Map<String,Object> result = new HashMap<String,Object>();
+		if ( validateResults.size() > 0) {
+			result.put("status", "0");
+			result.put("data", validateResults);
+			result.put("msg", "入参不合法");
+		}
+        result.put("status", "0");
+        return result;
+    }
+	
+	/**
+	 * 校验不通过，方法内自己处理，不做统一处理
+	 */
+	@Validate(value="age:int(0,10)")
+	@ResponseBody
+    @RequestMapping("/getPerson11")
+    public Map<String,Object> getPerson11(@RequestBody Person person,@ValidateHandler ArrayList<ValidateResult> validateResults){
+		Map<String,Object> result = new HashMap<String,Object>();
+		if ( validateResults.size() > 0) {
+			result.put("status", "0");
+			result.put("data", validateResults);
+			result.put("msg", "入参不合法");
+		}
+        result.put("status", "0");
+        return result;
+    }
 }

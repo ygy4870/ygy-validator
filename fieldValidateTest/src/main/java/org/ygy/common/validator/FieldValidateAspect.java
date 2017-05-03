@@ -1,5 +1,6 @@
 package org.ygy.common.validator;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
 import org.ygy.common.validator.bean.Validate;
+import org.ygy.common.validator.bean.ValidateHandler;
 import org.ygy.common.validator.bean.ValidateResult;
 import org.ygy.common.validator.handler.IValidateRuleHandler;
 
@@ -125,14 +127,37 @@ public class FieldValidateAspect {
             System.out.println("----校验耗时------"+(System.currentTimeMillis()-startTime));
             // 校验不通过处理
             if (0 != validateResults.size()) {
-                response = ValidateContext.getResponse();
-                request.setAttribute("validateResults", validateResults);
-                String handler  = validate.handler();
-                if (null == handler || "".equals(handler)) {
-                	handler = ValidateContext.getValidateErrorHandlerUrl();
-                }
-                request.getRequestDispatcher("/"+handler).forward(request, response);
-                return null;
+            	boolean inMethod = false;
+            	int index = 0;
+//            		ValidateHandler validateHandler = params[i].getClass().getAnnotation(ValidateHandler.class);
+//            		ValidateHandler validateHandler = null;
+            	Annotation[][] annotations = targetMethod.getParameterAnnotations();
+            	for (int i=0; i<annotations.length; i++) {
+            		if (null != annotations[i]) {
+            			for (int j=0; j<annotations[i].length; j++) {
+            				if (annotations[i][j] instanceof ValidateHandler) {
+            					inMethod = true;
+                        		index = i;
+                        		break;
+            				}
+            			}
+            		}
+            	}
+//            		if (null != validateHandler) {
+//            			
+//            		}
+            	if (inMethod) {
+            		params[index] = validateResults;
+            	} else {
+            		response = ValidateContext.getResponse();
+                    request.setAttribute("validateResults", validateResults);
+                    String handler  = validate.handler();
+                    if (null == handler || "".equals(handler)) {
+                    	handler = ValidateContext.getValidateErrorHandlerUrl();
+                    }
+                    request.getRequestDispatcher("/"+handler).forward(request, response);
+                    return null;
+            	}
             }
         } catch (Exception e) {
         	e.printStackTrace();
@@ -224,11 +249,8 @@ public class FieldValidateAspect {
      * @return
      */
     private Object getFieldValue(JSONObject jSONObject,ValidateExpItemInfo ruleInfo, HttpServletRequest request) {
-    	if (null == jSONObject) {
-    		return null;
-    	}
     	Object fieldValue = null;
-    	if ( !ValidateContext.getIsFromParam()) {//非表单传值
+    	if ( !ValidateContext.getIsFromParam() && null != jSONObject) {//非表单传值
             fieldValue = SimpleUtil.getFromJSONObject(ruleInfo.getField(), jSONObject);
         } else {
         	fieldValue = request.getParameter(ruleInfo.getField());

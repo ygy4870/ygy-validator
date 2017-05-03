@@ -1,6 +1,8 @@
 package ygy.test.fieldValidateTest.controller;
 
 public class Person {
+	
+//	private static final long serialVersionUID = 1L;
 
 	//正则：yang开头
 	private String name;

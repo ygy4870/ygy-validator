@@ -86,52 +86,116 @@ public class SimpleUtil {
      * @param fieldRule
      * @return
      */
-	public static ValidateExpItemInfo parseRule(String fieldRule) {
-        ValidateExpItemInfo ruleInfo = new ValidateExpItemInfo();
+//	public static ValidateExpItemInfo parseRule(String fieldRule) {
+//		ValidateExpItemInfo ruleInfo = new ValidateExpItemInfo();
+//		try {
+//			String[] arr = fieldRule.split(":");
+//			String rule = null;
+//			if (arr.length == 2) {
+//				ruleInfo.setFormatCorrect(true);
+//				ruleInfo.setField(arr[0]);
+//				rule = arr[1];
+//			}else {
+//				ruleInfo.setFormatCorrect(false);
+//				return ruleInfo;
+//			}
+//			int leftIndex = rule.indexOf("(");
+//			if (leftIndex > 0) {
+//				ruleInfo.setLeftSeparate("(");
+//			} else {
+//				leftIndex = rule.indexOf("[");
+//				if (leftIndex > 0) {
+//					ruleInfo.setLeftSeparate("[");
+//				} else {
+//					ruleInfo.setFormatCorrect(false);
+//					return ruleInfo;
+//				}
+//			}
+//			int rightIndex = rule.indexOf(")");
+//			if (rightIndex > 0) {
+//				ruleInfo.setRightSeparate(")");
+//			} else {
+//				rightIndex = rule.indexOf("]");
+//				if (rightIndex > 0) {
+//					ruleInfo.setRightSeparate("]");
+//				} else {
+//					ruleInfo.setFormatCorrect(false);
+//					return ruleInfo;
+//				}
+//			}     
+//			String ruleType = rule.substring(0, leftIndex).toLowerCase();//转换成小写，即忽略大小写
+//			ruleInfo.setRuleType(ruleType);    
+//			ruleInfo.setRuleContent(rule.substring(leftIndex+1, rightIndex).replaceAll("\"", "").replaceAll("'", "").split(","));
+//			ruleInfo.setNotNull(rule.substring(rightIndex+1).replaceAll(" ", ""));
+//			ruleInfo.setValidateExpItem(fieldRule);
+//		} catch (Exception e) {
+//			ruleInfo.setFormatCorrect(false);
+//		}
+//		return ruleInfo;
+//	}
+	
+	/**
+	 * 解析形如"字段名:校验规则1[!或!!]+校验规则1[!或!!]"的单字段多规则
+	 * @param fieldRule
+	 * @return
+	 */
+	public static List<ValidateExpItemInfo> parseMutilRule(String fieldRule) {
+		List<ValidateExpItemInfo> ruleInfoList = new ArrayList<ValidateExpItemInfo>(5);
+		String field = null;
         try {
             String[] arr = fieldRule.split(":");
-            String rule = null;
-            if (arr.length == 2) {
-            	ruleInfo.setFormatCorrect(true);
-            	ruleInfo.setField(arr[0]);
-            	rule = arr[1];
-            }else {
+            if (arr.length != 2) {
+            	ValidateExpItemInfo ruleInfo = new ValidateExpItemInfo();
                 ruleInfo.setFormatCorrect(false);
-                return ruleInfo;
+                ruleInfoList.add(ruleInfo);
+                return ruleInfoList;
             }
-            int leftIndex = rule.indexOf("(");
-            if (leftIndex > 0) {
-                ruleInfo.setLeftSeparate("(");
-            } else {
-                leftIndex = rule.indexOf("[");
+            field = arr[0];
+            String[] ruleList = arr[1].split("\\+");
+            for (int i=0; i<ruleList.length; i++) {
+            	ValidateExpItemInfo ruleInfo = new ValidateExpItemInfo();
+            	ruleInfo.setField(field);
+            	String rule = ruleList[i];
+            	int leftIndex = rule.indexOf("(");
                 if (leftIndex > 0) {
-                    ruleInfo.setLeftSeparate("[");
+                    ruleInfo.setLeftSeparate("(");
                 } else {
-                    ruleInfo.setFormatCorrect(false);
-                    return ruleInfo;
+                    leftIndex = rule.indexOf("[");
+                    if (leftIndex > 0) {
+                        ruleInfo.setLeftSeparate("[");
+                    } else {
+                        ruleInfo.setFormatCorrect(false);
+                        ruleInfoList.add(ruleInfo);
+                        return ruleInfoList;
+                    }
                 }
-            }
-            int rightIndex = rule.indexOf(")");
-            if (rightIndex > 0) {
-                ruleInfo.setRightSeparate(")");
-            } else {
-                rightIndex = rule.indexOf("]");
+                int rightIndex = rule.indexOf(")");
                 if (rightIndex > 0) {
-                    ruleInfo.setRightSeparate("]");
+                    ruleInfo.setRightSeparate(")");
                 } else {
-                    ruleInfo.setFormatCorrect(false);
-                    return ruleInfo;
-                }
-            }     
-            String ruleType = rule.substring(0, leftIndex).toLowerCase();//转换成小写，即忽略大小写
-            ruleInfo.setRuleType(ruleType);    
-            ruleInfo.setRuleContent(rule.substring(leftIndex+1, rightIndex).replaceAll("\"", "").replaceAll("'", "").split(","));
-            ruleInfo.setNotNull(rule.substring(rightIndex+1).replaceAll(" ", ""));
-            ruleInfo.setValidateExpItem(fieldRule);
+                    rightIndex = rule.indexOf("]");
+                    if (rightIndex > 0) {
+                        ruleInfo.setRightSeparate("]");
+                    } else {
+                        ruleInfo.setFormatCorrect(false);
+                        ruleInfoList.add(ruleInfo);
+                        return ruleInfoList;
+                    }
+                }     
+                String ruleType = rule.substring(0, leftIndex).toLowerCase();//转换成小写，即忽略大小写
+                ruleInfo.setRuleType(ruleType);    
+                ruleInfo.setRuleContent(rule.substring(leftIndex+1, rightIndex).replaceAll("\"", "").replaceAll("'", "").split(","));
+                ruleInfo.setNotNull(rule.substring(rightIndex+1).replaceAll(" ", ""));
+                ruleInfo.setValidateExpItem(fieldRule);
+                ruleInfoList.add(ruleInfo);
+            }
         } catch (Exception e) {
+        	ValidateExpItemInfo ruleInfo = new ValidateExpItemInfo();
+        	ruleInfo.setField(field);
             ruleInfo.setFormatCorrect(false);
+            ruleInfoList.add(ruleInfo);
         }
-        return ruleInfo;
+        return ruleInfoList;
     }
 	
 	/**
@@ -146,8 +210,10 @@ public class SimpleUtil {
 			if (rules != null && rules.length > 0) {
 	        	for (String rule : rules){
 	        		if (!"".equals(rule)) {
-	        			ValidateExpItemInfo ruleInfo = SimpleUtil.parseRule(rule);
-	        			ruleInfoList.add(ruleInfo);
+//	        			ValidateExpItemInfo ruleInfo = SimpleUtil.parseRule(rule);
+//	        			ruleInfoList.add(ruleInfo);
+	        			List<ValidateExpItemInfo> ruleInfos = SimpleUtil.parseMutilRule(rule);
+	        			ruleInfoList.addAll(ruleInfos);
 	        		}
 	        	}
 			}
