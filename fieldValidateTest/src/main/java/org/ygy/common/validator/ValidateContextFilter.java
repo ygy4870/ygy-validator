@@ -1,6 +1,9 @@
 package org.ygy.common.validator;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,10 +21,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.ygy.common.validator.bean.InputStreamRequest;
+import org.ygy.common.validator.bean.MyHttpRequest;
 import org.ygy.common.validator.bean.ParameterRequestWrapper;
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
 import org.ygy.common.validator.cache.ICacheStrategy;
 import org.ygy.common.validator.handler.IValidateRuleHandler;
+
+import com.esotericsoftware.kryo.io.Input;
 
 public class ValidateContextFilter implements Filter{  
 	
@@ -33,6 +40,28 @@ public class ValidateContextFilter implements Filter{
         String contenType = request.getContentType();
         HttpServletRequest req = (HttpServletRequest)request;
         String requestMethod = req.getMethod();
+        
+        MyHttpRequest my = new MyHttpRequest(req);
+       
+        
+        
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				my.getInputStream()));
+		StringBuilder sb = new StringBuilder();
+//		String xmlHead = request.g;
+		String xmlContent = "";
+		String line = null;
+		while ((line = in.readLine()) != null) {
+			sb.append(line);
+		}
+        System.out.println("=============================="+sb);
+        
+        
+        
+//        MyHttpRequest my = new MyHttpRequest(req);
+        
+        
+        
         /**
          * 只有GET请求和contentType=application/x-www-form-urlencoded的POST请求，request.getParameter才能获取到值
          */
@@ -50,7 +79,9 @@ public class ValidateContextFilter implements Filter{
             }
         } else {
             ValidateContext.setIsFromParam(false);
-            chain.doFilter(request, response);  
+            chain.doFilter(my, response);  
+//            HttpServletRequest requestProxy = new InputStreamRequest(req,new ByteArrayInputStream(sb.toString().getBytes()));
+//            chain.doFilter(requestProxy, response);  
         }
     }
     

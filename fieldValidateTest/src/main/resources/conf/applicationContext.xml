@@ -16,6 +16,8 @@
     <aop:aspectj-autoproxy proxy-target-class="true"/> 
     <!-- <context:component-scan base-package="org.ygy.common.validator" /> -->
     <bean class="ygy.test.fieldValidateTest.controller.TestController"/>
+    <bean class="ygy.test.fieldValidateTest.controller.HttpDemo"/>
+    <!-- <bean class="com.danlu.dlhttpx.HttpService"/> -->
     
     <bean class="org.ygy.common.validator.FieldValidateAspect"/>
     <bean class="org.ygy.common.validator.DefaultValidateErrorHandler"/>

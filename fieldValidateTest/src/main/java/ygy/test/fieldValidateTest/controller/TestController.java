@@ -17,7 +17,7 @@ import org.ygy.common.validator.bean.ValidateResult;
 @Controller
 @RequestMapping("test")
 public class TestController {
-	
+
 	/**
 	 * 测试一：简单字段校验（get请求或表单请求）
 	 */
