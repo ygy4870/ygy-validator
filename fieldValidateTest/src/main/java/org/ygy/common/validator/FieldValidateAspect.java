@@ -216,31 +216,31 @@ public class FieldValidateAspect {
             // 去掉多余斜杠"/",如URL为: person/getById 或  person//getById 都是指向同一资源的有效URI（在浏览器看来）
             url = url.replaceAll("/{2,}", "/");
         }
-        String validateExp = validate.value();
+//        String validateExp = validate.value();
         List<ValidateExpItemInfo> validateExpParseResult = null;
-        if (ValidateContext.getCache()) {//从缓存中获取，没有则解析再缓存
+//        if (ValidateContext.getCache()) {//从缓存中获取，没有则解析再缓存
         	validateExpParseResult = ValidateContext.getValidateExpParseResultFromCache(url);
-        	if (null == validateExpParseResult) {
-        		if ("".equals(validateExp)) {
-                	validateExp = ValidateContext.getValidateExp(url);
-                }
-        		if ("".equals(validateExp)) {//即没有在@Validate注解中填写校验表达式，配置文件中也没有
-        			return new ArrayList<ValidateExpItemInfo>();
-        		}
-        		validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
-        		ValidateContext.saveValidateExp(url, validateExp);
-        		ValidateContext.cacheValidateExpParseResult(url, validateExpParseResult);
-            }
-        } else {
-        	if ("".equals(validateExp)) {
-            	validateExp = ValidateContext.getValidateExp(url);
-            }
-    		if ("".equals(validateExp)) {//即没有在@Validate注解中填写校验表达式，配置文件中也没有
-    			return new ArrayList<ValidateExpItemInfo>();
-    		}
-    		validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
-    		ValidateContext.saveValidateExp(url, validateExp);
-        }
+//        	if (null == validateExpParseResult) {
+//        		if ("".equals(validateExp)) {
+//                	validateExp = ValidateContext.getValidateExp(url);
+//                }
+//        		if ("".equals(validateExp)) {//即没有在@Validate注解中填写校验表达式，配置文件中也没有
+//        			return new ArrayList<ValidateExpItemInfo>();
+//        		}
+//        		validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
+//        		ValidateContext.saveValidateExp(url, validateExp);
+//        		ValidateContext.cacheValidateExpParseResult(url, validateExpParseResult);
+//            }
+//        } else {
+//        	if ("".equals(validateExp)) {
+//            	validateExp = ValidateContext.getValidateExp(url);
+//            }
+//    		if ("".equals(validateExp)) {//即没有在@Validate注解中填写校验表达式，配置文件中也没有
+//    			return new ArrayList<ValidateExpItemInfo>();
+//    		}
+//    		validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
+//    		ValidateContext.saveValidateExp(url, validateExp);
+//        }
         return validateExpParseResult;
 	}
     

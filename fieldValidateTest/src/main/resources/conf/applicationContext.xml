@@ -21,6 +21,8 @@
     
     <bean class="org.ygy.common.validator.FieldValidateAspect"/>
     <bean class="org.ygy.common.validator.DefaultValidateErrorHandler"/>
+    <bean class="org.ygy.common.validator.ValidateScanBeanPostProcessor"/>
+    
     
     <mvc:annotation-driven />  
   

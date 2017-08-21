@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
+import org.ygy.common.validator.cache.AllCacheStrategy;
 import org.ygy.common.validator.cache.ICacheStrategy;
 import org.ygy.common.validator.handler.IValidateRuleHandler;
 
@@ -59,7 +60,7 @@ public class ValidateContext {
     /**
      * 缓存策略类
      */
-    private static ICacheStrategy cacheStrategyClass;
+    private static ICacheStrategy cacheStrategyClass = new AllCacheStrategy();
     /**
      * 若cache == true 且 cacheStrategy == "lru",缓存长度生效，默认为512
      */

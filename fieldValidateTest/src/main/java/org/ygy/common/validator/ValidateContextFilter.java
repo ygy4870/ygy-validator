@@ -25,6 +25,7 @@ import org.ygy.common.validator.bean.InputStreamRequest;
 import org.ygy.common.validator.bean.MyHttpRequest;
 import org.ygy.common.validator.bean.ParameterRequestWrapper;
 import org.ygy.common.validator.bean.ValidateExpItemInfo;
+import org.ygy.common.validator.bean.ValidateHttpRequest;
 import org.ygy.common.validator.cache.ICacheStrategy;
 import org.ygy.common.validator.handler.IValidateRuleHandler;
 
@@ -45,8 +46,9 @@ public class ValidateContextFilter implements Filter{
        
         
         
-		BufferedReader in = new BufferedReader(new InputStreamReader(
-				my.getInputStream()));
+//        BufferedReader in = new BufferedReader(new InputStreamReader(
+//        		req.getInputStream()));
+		BufferedReader in = my.getReader();
 		StringBuilder sb = new StringBuilder();
 //		String xmlHead = request.g;
 		String xmlContent = "";
@@ -65,24 +67,35 @@ public class ValidateContextFilter implements Filter{
         /**
          * 只有GET请求和contentType=application/x-www-form-urlencoded的POST请求，request.getParameter才能获取到值
          */
-        if ( "GET".equals(requestMethod.toUpperCase()) ||
-                ( "POST".equals(requestMethod.toUpperCase()) && "application/x-www-form-urlencoded".equals(contenType.toLowerCase())) ) {
-            ValidateContext.setIsFromParam(true);
-            if (ValidateContext.getFilter()) {//过滤掉非法字符
-            	Map<String, String[]> requestParams = req.getParameterMap();
-            	Map<String, String[]> legalrequestParams = this.filterIllegalRequestParams(requestParams);
-                HttpServletRequest requestProxy = new ParameterRequestWrapper(req, legalrequestParams);
-                ValidateContext.setRequest(requestProxy);
-                chain.doFilter(requestProxy, response);
-            } else {
-            	chain.doFilter(request, response); 
-            }
-        } else {
-            ValidateContext.setIsFromParam(false);
-            chain.doFilter(my, response);  
-//            HttpServletRequest requestProxy = new InputStreamRequest(req,new ByteArrayInputStream(sb.toString().getBytes()));
-//            chain.doFilter(requestProxy, response);  
-        }
+//        if ( "GET".equals(requestMethod.toUpperCase()) ||
+//                ( "POST".equals(requestMethod.toUpperCase()) && "application/x-www-form-urlencoded".equals(contenType.toLowerCase())) ) {
+//            ValidateContext.setIsFromParam(true);
+//            if (ValidateContext.getFilter()) {//过滤掉非法字符
+//            	Map<String, String[]> requestParams = req.getParameterMap();
+//            	Map<String, String[]> legalrequestParams = this.filterIllegalRequestParams(requestParams);
+//                HttpServletRequest requestProxy = new ParameterRequestWrapper(req, legalrequestParams);
+//                ValidateContext.setRequest(requestProxy);
+//                chain.doFilter(requestProxy, response);
+//            } else {
+//            	chain.doFilter(request, response); 
+//            }
+//        } else {
+//            ValidateContext.setIsFromParam(false);
+//            chain.doFilter(my, response);  
+//        }
+        
+        
+        
+        
+        
+        
+        
+        
+//        ValidateHttpRequest validateHttpRequest = new ValidateHttpRequest((HttpServletRequest)request);
+//        chain.doFilter(validateHttpRequest, response);
+        
+        
+        
     }
     
     @Override  
@@ -126,13 +139,13 @@ public class ValidateContextFilter implements Filter{
 					}
 				}
 				// 将校验规则处理器key存起来，避免在--步骤4--的预加载校验表达式过程中进行不必要解析
-				String[] keySet = ValidateContext.getKeywordSet();
-				keySet = SimpleUtil.concat(keySet, rules);
-				String defineCacheStrategy = config.getProperty("defineCacheStrategy");
-				if (null != defineCacheStrategy&& !"".equals(defineCacheStrategy)) {
-					String[] defineCacheStrategys = defineCacheStrategy.replaceAll(" ", "").split(",");
-					keySet = SimpleUtil.concat(keySet, defineCacheStrategys);
-				}
+//				String[] keySet = ValidateContext.getKeywordSet();
+//				keySet = SimpleUtil.concat(keySet, rules);
+//				String defineCacheStrategy = config.getProperty("defineCacheStrategy");
+//				if (null != defineCacheStrategy&& !"".equals(defineCacheStrategy)) {
+//					String[] defineCacheStrategys = defineCacheStrategy.replaceAll(" ", "").split(",");
+//					keySet = SimpleUtil.concat(keySet, defineCacheStrategys);
+//				}
 				/**
 				 * 2-解析校验错误处理器URL
 				 */
@@ -143,71 +156,71 @@ public class ValidateContextFilter implements Filter{
 				/**
 				 * 3-解析cache相关
 				 */
-				String cache = config.getProperty("cache");
-				if (null != cache && "false".equals(cache.trim().toLowerCase())) {
-					ValidateContext.setCache(false);
-				}
-				if (ValidateContext.getCache()) {// 使用缓存
-					String cacheStrategy = config.getProperty("cacheStrategy");
-					if (null != cacheStrategy && !"".equals(cacheStrategy.trim())) {
-						ValidateContext.setCacheStrategy(cacheStrategy.trim().toLowerCase());
-					}
-					if (!"all".equals(ValidateContext.getCacheStrategy())) {
-						String cacheCount = config.getProperty("cacheCount");
-						if (null != cacheCount && !"".equals(cacheCount.trim())) {
-							int count = 0;
-							try {
-								count = Integer.parseInt(cacheCount.trim());
-							} catch (Exception e) {
-								count = 100;
-							}
-							ValidateContext.setCacheCount(count);
-						}
-					}
+//				String cache = config.getProperty("cache");
+//				if (null != cache && "false".equals(cache.trim().toLowerCase())) {
+//					ValidateContext.setCache(false);
+//				}
+//				if (ValidateContext.getCache()) {// 使用缓存
+//					String cacheStrategy = config.getProperty("cacheStrategy");
+//					if (null != cacheStrategy && !"".equals(cacheStrategy.trim())) {
+//						ValidateContext.setCacheStrategy(cacheStrategy.trim().toLowerCase());
+//					}
+//					if (!"all".equals(ValidateContext.getCacheStrategy())) {
+//						String cacheCount = config.getProperty("cacheCount");
+//						if (null != cacheCount && !"".equals(cacheCount.trim())) {
+//							int count = 0;
+//							try {
+//								count = Integer.parseInt(cacheCount.trim());
+//							} catch (Exception e) {
+//								count = 100;
+//							}
+//							ValidateContext.setCacheCount(count);
+//						}
+//					}
 					// 加载缓存策略类
-					cacheStrategy = ValidateContext.getCacheStrategy();
-					String classPath = config.getProperty(cacheStrategy);
-					if (null == classPath || "".equals(classPath.trim())) {
-						classPath = config.getProperty("all");
-					}
-					try {
-						Class<?> clazz = Class.forName(classPath);
-						ValidateContext.setCacheStrategyClass((ICacheStrategy) clazz.newInstance());
-					} catch (Exception e) {
-						System.out.println("预加载" + cacheStrategy + "型缓存策略类失败："+ e);
-					}
+//					cacheStrategy = ValidateContext.getCacheStrategy();
+//					String classPath = config.getProperty(cacheStrategy);
+//					if (null == classPath || "".equals(classPath.trim())) {
+//				String classPath = config.getProperty("all");
+//					}
+//					try {
+//						Class<?> clazz = Class.forName(classPath);
+//						ValidateContext.setCacheStrategyClass((ICacheStrategy) clazz.newInstance());
+//					} catch (Exception e) {
+//						System.out.println("预加载" + cacheStrategy + "型缓存策略类失败："+ e);
+//					}
 				}
 				/**
 				 * 4-预加载校验表达式、缓存表达式解析结果
 				 */
-				Set<Entry<Object, Object>> entrySet = config.entrySet();
-				for (Entry<Object, Object> entry : entrySet) {
-					String url = (String) entry.getKey();
-					// 过滤掉关键字配置行及规则处理器配置行
-					if (null != keySet && SimpleUtil.contains(keySet, url)) {
-						continue;
-					}
-					String validateExp = (String) entry.getValue();
-					ValidateContext.saveValidateExp(url, validateExp);
-					if (ValidateContext.getCache()) {// 缓存校验表达式解析结果
-						List<ValidateExpItemInfo> validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
-						ValidateContext.cacheValidateExpParseResult(url,validateExpParseResult);
-					}
-				}
+//				Set<Entry<Object, Object>> entrySet = config.entrySet();
+//				for (Entry<Object, Object> entry : entrySet) {
+//					String url = (String) entry.getKey();
+//					// 过滤掉关键字配置行及规则处理器配置行
+//					if (null != keySet && SimpleUtil.contains(keySet, url)) {
+//						continue;
+//					}
+//					String validateExp = (String) entry.getValue();
+//					ValidateContext.saveValidateExp(url, validateExp);
+//					if (ValidateContext.getCache()) {// 缓存校验表达式解析结果
+//						List<ValidateExpItemInfo> validateExpParseResult = SimpleUtil.parseValidateExpression(validateExp);
+//						ValidateContext.cacheValidateExpParseResult(url,validateExpParseResult);
+//					}
+//				}
 				/**
 				 * 5-解析过滤非法字符相关
 				 */
-				String filter = config.getProperty("filter");
-				if (null != filter && "false".equals(filter.trim().toLowerCase())) {
-					ValidateContext.setFilter(false);
-				}
-				if (ValidateContext.getFilter()) {
-					String illegalCharacter = config .getProperty("illegalCharacter");
-					if (null != illegalCharacter) {
-						String[] illegalCharArray = illegalCharacter.replaceAll(" ", "").toUpperCase().split(",");
-						ValidateContext.setIllegalCharArray(illegalCharArray);
-					}
-				}
+//				String filter = config.getProperty("filter");
+//				if (null != filter && "false".equals(filter.trim().toLowerCase())) {
+//					ValidateContext.setFilter(false);
+//				}
+//				if (ValidateContext.getFilter()) {
+//					String illegalCharacter = config .getProperty("illegalCharacter");
+//					if (null != illegalCharacter) {
+//						String[] illegalCharArray = illegalCharacter.replaceAll(" ", "").toUpperCase().split(",");
+//						ValidateContext.setIllegalCharArray(illegalCharArray);
+//					}
+//				}
 				/**
 				 * 6-解析是否进行后续校验全局配置
 				 */
@@ -215,7 +228,7 @@ public class ValidateContextFilter implements Filter{
 				if (null != validateAll && "true".equals(validateAll.trim().toLowerCase())) {
 					ValidateContext.setValidateAll(true);
 				}
-			}
+//			}
 		} catch (Exception e) {
 			System.out.println("校验配置文件读取失败："+e);
     	} 
